@@ -26,7 +26,7 @@ def build_xgb_classifier(data: Dict, **kwargs) -> XGBClassifier:
     y_valid = data['y_valid']
 
 
-    model = XGBClassifier(random_state=SEED, n_jobs=-1, **kwargs)
-    model.fit(X_train, y_train, eval_set=[(X_valid, y_valid)], early_stopping_rounds=10, verbose=False)
+    model = XGBClassifier(random_state=SEED, n_jobs=-1, early_stopping_rounds=10, **kwargs)
+    model.fit(X_train, y_train, eval_set=[(X_valid, y_valid)],  verbose=False)
 
     return model
