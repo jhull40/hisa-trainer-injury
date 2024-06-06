@@ -9,3 +9,5 @@ SEXES = ['G', 'M', 'F', 'C', 'H']
 TARGET = "dnf"
 
 SEED = 524
+
+YEARS_TO_MODEL = [2023, 2022, 2021, 2019, 2018]
