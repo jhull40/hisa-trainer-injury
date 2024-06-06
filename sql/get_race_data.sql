@@ -76,5 +76,6 @@ DATEDIFF(day,foaling_date, r.race_date)/365.0 as age
 --inner join [RTR_Prod].[dbo].[distance] d
 --on d.distance_id = r.distance_id and r.breed_type = d.breed_type
   
-where left(horse_name,1) = 'B'
-and YEAR(r.race_date) >= 2000
+where 
+--left(horse_name,1) = 'B'
+YEAR(r.race_date) = 2023

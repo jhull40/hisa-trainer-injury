@@ -2,9 +2,9 @@ import pandas as pd
 
 
 def load_data():
-    races = pd.read_csv("../../hisa-data/races_3sample.csv")
+    df = pd.read_csv('/users/jameshull/documents/github/hisa-data/races_2023.csv', nrows=1000)
 
-    return races
+    return df
 
 
 if __name__ == "__main__":

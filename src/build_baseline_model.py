@@ -38,8 +38,5 @@ def main():
         pickle.dump(xgb_model, f)
 
 
-
-
-
 if __name__ == '__main__':
     main()
