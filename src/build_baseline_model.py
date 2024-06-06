@@ -1,14 +1,15 @@
 import pandas as pd
 import pickle
 
+from baseline_model.constants import LOCAL_PATH, S3_PATH
 from baseline_model.load_data import load_data
 from baseline_model.preprocessing import preprocess_data, create_train_test_split
 from models.model_builds import build_linear_classifier, build_xgb_classifier
 from models.eval import evaluate_classification
 
 
-def main():
-    df = load_data()
+def main(local=False):
+    df = load_data(local)
     df = preprocess_data(df)
     data = create_train_test_split(df, test_size=0.2, valid_size=0.1)
 
@@ -29,14 +30,24 @@ def main():
             metric = {'model': metric.pop('model'), 'dataset': metric.pop('dataset'), **metric}
             metrics.append(metric)  
 
-    pd.DataFrame(metrics).to_csv('output/models/baseline_model_metrics.csv', index=False)
-
-    with open('output/models/baseline_log_reg_model.pkl', 'wb') as f:
+    
+    path = LOCAL_PATH if local else S3_PATH
+    metrics = pd.DataFrame(metrics)
+    metrics.to_csv(f'{path}/baseline_model_metrics.csv', index=False)
+    with open(f'{path}/baseline_log_reg_model.pkl', 'wb') as f:
         pickle.dump(log_reg_model, f)
-
-    with open('output/models/baseline_xgb_model.pkl', 'wb') as f:
+    with open(f'{path}/baseline_xgb_model.pkl', 'wb') as f:
         pickle.dump(xgb_model, f)
+
+    output = {
+        'metrics': metrics,
+        'log_reg_model': log_reg_model,
+        'xgb_model': xgb_model
+    }
+
+    return output
+
 
 
 if __name__ == '__main__':
-    main()
+    output = main()
