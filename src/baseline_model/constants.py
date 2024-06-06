@@ -12,4 +12,5 @@ SEED = 524
 
 YEARS_TO_MODEL = [2023, 2022, 2021, 2019, 2018]
 LOCAL_PATH = 'output/models'
-S3_PATH = 's3://trainer-injury'
+OUTPUT_BUCKET = 'trainer-injury'
+DATA_BUCKET = 'rtr-race-data' 

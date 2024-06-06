@@ -1,7 +1,8 @@
 import pandas as pd
 import pickle
+import boto3
 
-from baseline_model.constants import LOCAL_PATH, S3_PATH
+from baseline_model.constants import LOCAL_PATH, OUTPUT_BUCKET
 from baseline_model.load_data import load_data
 from baseline_model.preprocessing import preprocess_data, create_train_test_split
 from models.model_builds import build_linear_classifier, build_xgb_classifier
@@ -30,14 +31,23 @@ def main(local=False):
             metric = {'model': metric.pop('model'), 'dataset': metric.pop('dataset'), **metric}
             metrics.append(metric)  
 
-    
-    path = LOCAL_PATH if local else S3_PATH
     metrics = pd.DataFrame(metrics)
-    metrics.to_csv(f'{path}/baseline_model_metrics.csv', index=False)
-    with open(f'{path}/baseline_log_reg_model.pkl', 'wb') as f:
-        pickle.dump(log_reg_model, f)
-    with open(f'{path}/baseline_xgb_model.pkl', 'wb') as f:
-        pickle.dump(xgb_model, f)
+
+    if local:    
+        metrics.to_csv(f'{LOCAL_PATH}/baseline_model_metrics.csv', index=False)
+        with open(f'{LOCAL_PATH}/baseline_log_reg_model.pkl', 'wb') as f:
+            pickle.dump(log_reg_model, f)
+        with open(f'{LOCAL_PATH}/baseline_xgb_model.pkl', 'wb') as f:
+            pickle.dump(xgb_model, f)
+    else:
+        metrics.to_csv(f's3://{OUTPUT_BUCKET}/baseline_model_metrics.csv', index=False)
+        
+        s3_resource = boto3.resource('s3')
+        pickle_byte_obj = pickle.dumps(log_reg_model)
+        s3_resource.Object(OUTPUT_BUCKET,'baseline_log_reg_model.pkl').put(Body=pickle_byte_obj)
+
+        pickle_byte_obj = pickle.dumps(xgb_model)
+        s3_resource.Object(OUTPUT_BUCKET,'baseline_xgb_model.pkl').put(Body=pickle_byte_obj)
 
     output = {
         'metrics': metrics,
