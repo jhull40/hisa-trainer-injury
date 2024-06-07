@@ -78,4 +78,4 @@ DATEDIFF(day,foaling_date, r.race_date)/365.0 as age
   
 where 
 --left(horse_name,1) = 'B'
-YEAR(r.race_date) = 2023
+YEAR(r.race_date) = 2020
