@@ -1,11 +1,11 @@
 import json
 
-from smoothing.load_data import load_data
+from baseline_model.load_data import load_data
 import smoothing.beta_binom as bb
 
 
 def main():
-    df = load_data()
+    df = load_data(local=True)
     df = bb.preprocess_data(df)
     alpha, beta = bb.calculate_beta_binom_params(df)
     bb.create_sample_plot(alpha, beta)

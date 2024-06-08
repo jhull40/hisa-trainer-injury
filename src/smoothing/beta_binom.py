@@ -16,17 +16,24 @@ from smoothing.constants import (
 
 
 def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
+
+    df['dnf'] = np.where(
+        (df['trouble_indicator'] == 'Y') | (df['length_behind_at_finish'] == 9999),
+        1,
+        0
+    )
+    
     df = (
-        df.groupby("trainer_name")
+        df.groupby("trainer_id")
         .agg(
             {
                 "dnf": "sum",
                 "registration_number": "nunique",
-                "ChartID": "count",
+                "race_date": "count",
             }
         )
         .reset_index()
-        .rename(columns={"registration_number": "n_horses", "ChartID": "n_starts"})
+        .rename(columns={"registration_number": "n_horses", "race_date": "n_starts"})
     )
 
     df["dnf_pct"] = df["dnf"] / df["n_starts"]
@@ -137,7 +144,7 @@ def create_ranking_plot(df: pd.DataFrame, alpha0: float, beta0: float) -> None:
     plt.figure()
     plt.errorbar(
         df["smoothed_dnf_pct"],
-        df["trainer_name"],
+        df["trainer_id"],
         xerr=[df["smoothed_dnf_pct"] - df["low"], df["high"] - df["smoothed_dnf_pct"]],
         fmt="o",
         color="blue",

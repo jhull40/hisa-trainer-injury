@@ -2,7 +2,7 @@ import pandas as pd
 import pickle
 import boto3
 
-from baseline_model.constants import LOCAL_PATH, OUTPUT_BUCKET
+from baseline_model.constants import LOCAL_PATH, OUTPUT_BUCKET, TARGET
 from baseline_model.load_data import load_data
 from baseline_model.preprocessing import preprocess_data, create_train_test_split
 from models.model_builds import build_linear_classifier, build_xgb_classifier
@@ -12,7 +12,7 @@ from models.eval import evaluate_classification
 def main(local=False):
     df = load_data(local)
     df = preprocess_data(df)
-    data = create_train_test_split(df, test_size=0.2, valid_size=0.1)
+    data = create_train_test_split(df, test_size=0.2, valid_size=0.1, split_column='registration_number', target_column=TARGET)
 
     log_reg_model = build_linear_classifier(data)
     xgb_model = build_xgb_classifier(data)
