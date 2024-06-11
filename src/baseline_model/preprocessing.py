@@ -1,8 +1,7 @@
-from typing import Dict
 import pandas as pd
 import numpy as np
 
-from baseline_model.load_data import load_data
+from utils.processing import get_dnf
 from baseline_model.constants import (
     SURFACES,
     RACE_TYPES,
@@ -11,9 +10,9 @@ from baseline_model.constants import (
     WEATHERS,
     TRACK_SEALEDS,
     SEXES,
-    TARGET,
-    SEED
+    TARGET
 )
+
 
 def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     
@@ -60,47 +59,9 @@ def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
         )
         cols_for_model.append(f'sex_{i}')
 
-    df['dnf'] = np.where(
-        (df['trouble_indicator'] == 'Y') | (df['length_behind_at_finish'] == 9999),
-        1,
-        0
-    )
-
+    df['dnf'] = get_dnf(df)
     df = df[df['scratch_indicator'] == 'N']
     df = df[cols_for_model]
 
     return df
-
-
-def create_train_test_split(
-    df: pd.DataFrame, test_size: float, valid_size: float, split_column: str, target_column: str
-) -> Dict:
-    reg_numbers = list(df[split_column].unique())
-    np.random.seed(SEED)
-    np.random.shuffle(reg_numbers)
-
-    valid_ids = reg_numbers[: int(valid_size * len(reg_numbers))]
-    test_ids = reg_numbers[
-        int(valid_size * len(reg_numbers)) : int(
-            (valid_size + test_size) * len(reg_numbers)
-        )
-    ]
-    train_ids = reg_numbers[int((valid_size + test_size) * len(reg_numbers)) :]
-
-    data = {
-        'X_train': df[df[split_column].isin(train_ids)].drop(
-            columns=[target_column, split_column]
-        ),
-        'X_valid': df[df[split_column].isin(valid_ids)].drop(
-            columns=[target_column, split_column]
-        ),
-        'X_test': df[df[split_column].isin(test_ids)].drop(
-            columns=[target_column, split_column]
-        ),
-        'y_train': df[df[split_column].isin(train_ids)][target_column],
-        'y_valid': df[df[split_column].isin(valid_ids)][target_column],
-        'y_test': df[df[split_column].isin(test_ids)][target_column],
-    }
-
-    return data
 

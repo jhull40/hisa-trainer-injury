@@ -2,7 +2,7 @@ from typing import Dict
 from sklearn.linear_model import LogisticRegressionCV, LassoCV
 from xgboost import XGBClassifier, XGBRegressor
 
-from baseline_model.constants import SEED
+from utils.constants import SEED
 
 
 

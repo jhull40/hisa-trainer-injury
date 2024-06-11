@@ -6,6 +6,7 @@ from scipy.optimize import minimize
 from scipy.special import betaln
 from scipy.stats import beta
 
+from utils.processing import get_dnf
 from smoothing.constants import (
     MIN_STARTS_THRESHOLD,
     INITIAL_PARAMS,
@@ -17,11 +18,7 @@ from smoothing.constants import (
 
 def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
 
-    df['dnf'] = np.where(
-        (df['trouble_indicator'] == 'Y') | (df['length_behind_at_finish'] == 9999),
-        1,
-        0
-    )
+    df['dnf'] = get_dnf(df)
     
     df = (
         df.groupby("trainer_id")
@@ -72,9 +69,9 @@ def calculate_beta_binom_params(df: pd.DataFrame) -> Tuple[float, float]:
 
 
 def generate_beta_binomial_samples(
-    n: int, alpha: float, beta: float, size: int
+    n: int, alpha0: float, beta0: float, size: int
 ) -> np.ndarray:
-    p = np.random.beta(alpha, beta, size)
+    p = np.random.beta(alpha0, beta0, size)
     samples = np.random.binomial(n, p, size)
 
     return samples
@@ -92,7 +89,7 @@ def create_sample_plot(alpha0: float, beta0: float) -> None:
         color="blue",
         edgecolor="black",
     )
-    plt.xlim(-0.5, N_TRIALS / 10 + 0.5)
+    plt.xlim(-0.05, .05)
     plt.xlabel(f"DNFs per {N_TRIALS} starts")
     plt.ylabel("Count of Trainers")
     plt.title("Simulated Number of DNFs")
@@ -111,15 +108,15 @@ def create_smoothed_scatter_plot(df: pd.DataFrame, alpha0: float, beta0: float) 
         cmap="bwr",
         alpha=0.5,
     )
-    plt.plot([0, 0.15], [0, 0.15], color="gray", linestyle="--", alpha=0.8)
+    plt.plot([0, 0.05], [0, 0.05], color="gray", linestyle="--", alpha=0.8)
     plt.plot(
-        [0, 1],
+        [0, .05],
         [(alpha0) / (alpha0 + beta0), (alpha0) / (alpha0 + beta0)],
         color="black",
         linestyle="--",
     )
-    plt.xlim(-0.005, 0.15)
-    plt.ylim(-0.005, 0.15)
+    plt.xlim(-0.005, 0.05)
+    plt.ylim(-0.005, 0.05)
     plt.xlabel("Observed DNF Rate")
     plt.ylabel("Smoothed DNF Rate")
     plt.title("Observed vs. Smoothed DNF Rate")
@@ -144,7 +141,7 @@ def create_ranking_plot(df: pd.DataFrame, alpha0: float, beta0: float) -> None:
     plt.figure()
     plt.errorbar(
         df["smoothed_dnf_pct"],
-        df["trainer_id"],
+        df["trainer_id"].astype(str),
         xerr=[df["smoothed_dnf_pct"] - df["low"], df["high"] - df["smoothed_dnf_pct"]],
         fmt="o",
         color="blue",

@@ -2,9 +2,11 @@ import pandas as pd
 import pickle
 import boto3
 
-from baseline_model.constants import LOCAL_PATH, OUTPUT_BUCKET, TARGET
-from baseline_model.load_data import load_data
-from baseline_model.preprocessing import preprocess_data, create_train_test_split
+from utils.constants import LOCAL_PATH, OUTPUT_BUCKET
+from utils.load_data import load_data
+from utils.processing import create_train_test_split
+from baseline_model.constants import TARGET
+from baseline_model.preprocessing import preprocess_data
 from models.model_builds import build_linear_classifier, build_xgb_classifier
 from models.eval import evaluate_classification
 
@@ -24,6 +26,9 @@ def main(local=False):
             y = data[f'y_{dset}']
             y_pred = model.predict(X)
             y_pred_soft_labels = model.predict_proba(X)[:, 1]
+            data[f'X_{dset}']['y_pred'] = y_pred
+            data[f'X_{dset}']['y_pred_proba'] = y_pred_soft_labels
+            data[f'X_{dset}']['y_true'] = y
 
             metric = evaluate_classification(y, y_pred, y_pred_soft_labels)
             metric['model'] = model.__class__.__name__
@@ -52,7 +57,8 @@ def main(local=False):
     output = {
         'metrics': metrics,
         'log_reg_model': log_reg_model,
-        'xgb_model': xgb_model
+        'xgb_model': xgb_model,
+        'data': data
     }
 
     return output

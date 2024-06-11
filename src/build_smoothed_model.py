@@ -1,6 +1,6 @@
 import json
 
-from baseline_model.load_data import load_data
+from utils.load_data import load_data
 import smoothing.beta_binom as bb
 
 

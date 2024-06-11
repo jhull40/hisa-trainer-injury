@@ -1,5 +1,5 @@
 import pandas as pd
-from baseline_model.constants import YEARS_TO_MODEL, DATA_BUCKET
+from utils.constants import YEARS_TO_MODEL, DATA_BUCKET
 
 
 def load_data(local=False):
