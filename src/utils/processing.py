@@ -3,8 +3,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from utils.constants import SEED
-
+from utils.constants import SEED, BADLY_BEATEN_THRESHOLD
 
 
 def get_dnf(df: pd.DataFrame) -> pd.Series:
@@ -15,6 +14,60 @@ def get_dnf(df: pd.DataFrame) -> pd.Series:
         )
     
     return pd.Series(dnf, name='dnf')
+
+
+
+def get_scratches(df: pd.DataFrame) -> pd.Series:
+    scratched = np.where(
+            df['scratch_indicator'] == 'Y',
+            1,
+            0
+        )
+    
+    vets_scratch = np.where(
+        (df['scratch_indicator'] == 'Y') & (df['scratch_reason'].isin(['I', 'J', 'N', 'U', 'V', 'Z'])),
+        1,
+        0
+    )
+
+    return pd.Series(scratched, name='scratched'), pd.Series(vets_scratch, name='vet_scratched')
+    
+
+def get_medication(df: pd.DataFrame) -> pd.Series:
+
+    lasix = np.where(
+        df['medication'].str.contains('L'),
+        1,
+        0
+    )
+    
+    bute = np.where(
+        df['medication'].str.contains('B'),
+        1,
+        0
+    )
+
+    return pd.Series(lasix, name='lasix'), pd.Series(bute, name='bute')
+    
+
+def get_badly_beaten(df: pd.DataFrame) -> pd.Series:
+    badly_beaten = np.where(
+        (df['length_behind_at_finish'] > BADLY_BEATEN_THRESHOLD) & (df['dnf'] == 0),
+        1,
+        0
+    )
+
+    return pd.Series(badly_beaten, name='badly_beaten')
+
+
+def get_breakdown(df: pd.DataFrame) -> pd.Series:
+    breakdown = np.where(
+        (df['long_comment'].str.contains('vanned')) & (df['dnf'] == 1), 
+        1,
+        0
+    )
+
+    return pd.Series(breakdown, name='breakdown')
 
 
 
