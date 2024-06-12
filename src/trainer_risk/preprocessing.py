@@ -37,7 +37,9 @@ def get_xDNF(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def extract_features(df: pd.DataFrame) -> pd.DataFrame:
+
     df['dnf'] = get_dnf(df)
+    df = get_xDNF(df)
 
     df['scratched'] = np.where(
         df['scratch_indicator'] == 'Y',
@@ -235,6 +237,7 @@ def create_targets(df: pd.DataFrame):
 def create_full_dataset_by_date(df: pd.DataFrame, prediction_dates: List[str]) -> pd.DataFrame:
 
     full_model_df = pd.DataFrame()
+    df['race_date'] = pd.to_datetime(df['race_date'])
     for prediction_date in prediction_dates:
         df_date = pd.DataFrame()
         for feature_day_delta in FEATURE_DAY_DELTAS:
@@ -266,6 +269,8 @@ def create_full_dataset_by_date(df: pd.DataFrame, prediction_dates: List[str]) -
 
 def create_full_dataset_by_entries(df: pd.DataFrame, prediction_dates: List[str]) -> pd.DataFrame:
 
+    df['race_date'] = pd.to_datetime(df['race_date'])
+    full_model_df = pd.DataFrame()
     for prediction_date in prediction_dates:
         df_date = pd.DataFrame()
         for n_entries in N_ENTRIES_SAMPLES:
@@ -273,8 +278,8 @@ def create_full_dataset_by_entries(df: pd.DataFrame, prediction_dates: List[str]
             feature_start_date = feature_end_date - datetime.timedelta(days=365)
             target_end_date = feature_end_date + datetime.timedelta(days=365)
             
-            df_past = df[(df['race_date'] < prediction_date) & (df['race_date'] >= feature_start_date)]
-            df_future = df[(df['race_date'] >= prediction_date) & (df['race_date'] < target_end_date)]
+            df_past = df[(df['race_date'] < feature_end_date) & (df['race_date'] >= feature_start_date)]
+            df_future = df[(df['race_date'] >= feature_end_date) & (df['race_date'] < target_end_date)]
             
             df_features = df_past.groupby('trainer_id').apply(lambda x: x.tail(n_entries)).reset_index(drop=True)
             df_target = df_future.groupby('trainer_id').apply(lambda x: x.tail(250)).reset_index(drop=True)

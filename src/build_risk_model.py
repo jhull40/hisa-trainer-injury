@@ -6,7 +6,7 @@ import boto3
 from utils.constants import LOCAL_PATH, OUTPUT_BUCKET
 from utils.load_data import load_data
 from utils.processing import create_train_test_split
-from baseline_model.constants import TARGET
+from trainer_risk.constants import DATES_USED
 from trainer_risk.preprocessing import create_full_dataset
 from models.model_builds import build_linear_regressor, build_xgb_regressor
 from models.eval import evaluate_regression, get_feature_importance
@@ -14,8 +14,8 @@ from models.eval import evaluate_regression, get_feature_importance
 
 def main(local: bool, feature_mode: str) -> Dict:
     df = load_data(local)
-    df = create_full_dataset(df, feature_mode)
-    data = create_train_test_split(df, test_size=0.2, valid_size=0.1, split_column='registration_number', target_column=TARGET)
+    df = create_full_dataset(df, DATES_USED, feature_mode)
+    data = create_train_test_split(df, test_size=0.2, valid_size=0.1, split_column='trainer_id', target_column='target_dnf_smoothed')
 
     lin_reg_model = build_linear_regressor(data)
     xgb_model = build_xgb_regressor(data)
@@ -73,4 +73,4 @@ def main(local: bool, feature_mode: str) -> Dict:
 
 
 if __name__ == '__main__':
-    output = main()
+    output = main(False, 'date')

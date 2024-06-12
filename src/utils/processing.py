@@ -32,16 +32,17 @@ def create_train_test_split(
         )
     ]
     train_ids = reg_numbers[int((valid_size + test_size) * len(reg_numbers)) :]
+    cols_to_drop = [target_column, split_column] + [c for c in df.columns if 'target' in c]
 
     data = {
         'X_train': df[df[split_column].isin(train_ids)].drop(
-            columns=[target_column, split_column]
+            columns=cols_to_drop
         ),
         'X_valid': df[df[split_column].isin(valid_ids)].drop(
-            columns=[target_column, split_column]
+            columns=cols_to_drop
         ),
         'X_test': df[df[split_column].isin(test_ids)].drop(
-            columns=[target_column, split_column]
+            columns=cols_to_drop
         ),
         'y_train': df[df[split_column].isin(train_ids)][target_column],
         'y_valid': df[df[split_column].isin(valid_ids)][target_column],

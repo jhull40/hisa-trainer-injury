@@ -8,7 +8,7 @@ from utils.constants import SEED
 
 def build_linear_classifier(data: Dict) -> LogisticRegressionCV:
     
-    X_train = data['X_train']
+    X_train = data['X_train'].fillna(0)
     y_train = data['y_train']
 
     model = LogisticRegressionCV(cv=5, random_state=SEED, max_iter=1000, n_jobs=-1)
@@ -34,7 +34,7 @@ def build_xgb_classifier(data: Dict, **kwargs) -> XGBClassifier:
 
 def build_linear_regressor(data: Dict) -> LassoCV:
     
-    X_train = data['X_train']
+    X_train = data['X_train'].fillna(0)
     y_train = data['y_train']
 
     model = LassoCV(cv=5, random_state=SEED, n_jobs=-1)
