@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 
 from utils.constants import SEED, BADLY_BEATEN_THRESHOLD
+from smoothing.constants import COLS_FOR_SMOOTHING, DENOMINATORS
 
 
 def get_dnf(df: pd.DataFrame) -> pd.Series:
@@ -68,6 +69,52 @@ def get_breakdown(df: pd.DataFrame) -> pd.Series:
     )
 
     return pd.Series(breakdown, name='breakdown')
+
+
+def build_features(df: pd.DataFrame) -> pd.DataFrame:
+    df['dnf'] = get_dnf(df)
+    df['scratched'], df['vet_scratched'] = get_scratches(df)
+    df['lasix'], df['bute'] = get_medication(df)
+    df['badly_beaten'] = get_badly_beaten(df)
+    df['breakdown'] = get_breakdown(df)
+
+    return df
+
+
+def group_trainer_info(df: pd.DataFrame) -> pd.DataFrame:
+
+    trainer_entries = df.groupby('trainer_id').agg({
+        'registration_number': 'nunique',
+        'race_date': 'count'
+    }).reset_index().rename(columns={
+        'registration_number': 'n_horses', 
+        'race_date': 'n_entries'
+    })
+
+    starts = df[df['scratched'] == 0]
+    trainer_starts = starts.groupby('trainer_id').agg({
+        'race_date': 'count'
+    }).reset_index().rename(columns={
+        'race_date': 'n_starts'
+    })
+
+    trainer_stats = df.groupby('trainer_id').agg({
+        'dnf': 'sum',
+        'scratched': 'sum',
+        'vet_scratched': 'sum',
+        'badly_beaten': 'sum',
+        'breakdown': 'sum'
+    }).reset_index()
+
+    trainer_data = trainer_entries.merge(trainer_starts, on='trainer_id', how='inner')
+    trainer_data = trainer_data.merge(trainer_stats, on='trainer_id', how='inner')
+    trainer_data = trainer_data.fillna(0)
+
+    for col in COLS_FOR_SMOOTHING:
+        trainer_data[f'{col}_pct'] = trainer_data[col] / trainer_data[DENOMINATORS[col]]
+
+
+    return trainer_data
 
 
 
