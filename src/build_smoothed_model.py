@@ -6,12 +6,12 @@ from utils.constants import OUTPUT_BUCKET
 from smoothing.constants import COLS_FOR_SMOOTHING
 
 
-def main():
-    df = load_data(False, True)
+def main(local: bool):
+    df = load_data(local, True)
     df = build_features(df)
     trainers = group_trainer_info(df)
     smoothing_params = bb.get_smoothing_params(trainers)
-    trainers = bb.calculate_smoothed_rates(trainers, smoothing_p
+    trainers = bb.calculate_smoothed_rates(trainers, smoothing_params)
 
     for c in COLS_FOR_SMOOTHING:
         bb.create_smoothed_scatter_plot(trainers, smoothing_params[c]['alpha0'], smoothing_params[c]['beta0'], c)
