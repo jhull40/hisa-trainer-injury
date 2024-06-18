@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from utils.constants import SEED, BADLY_BEATEN_THRESHOLD
+from utils.constants import SEED, BADLY_BEATEN_THRESHOLD, LONG_LAYOFF_THRESHOLD
 from smoothing.constants import COLS_FOR_SMOOTHING, DENOMINATORS
 
 
@@ -83,7 +83,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def group_trainer_info(df: pd.DataFrame) -> pd.DataFrame:
 
-    trainer_entries = df.groupby('trainer_id').agg({
+    trainer_entries = df.groupby(['trainer_id', 'trainer_name']).agg({
         'registration_number': 'nunique',
         'race_date': 'count'
     }).reset_index().rename(columns={
@@ -92,13 +92,13 @@ def group_trainer_info(df: pd.DataFrame) -> pd.DataFrame:
     })
 
     starts = df[df['scratched'] == 0]
-    trainer_starts = starts.groupby('trainer_id').agg({
+    trainer_starts = starts.groupby(['trainer_id', 'trainer_name']).agg({
         'race_date': 'count'
     }).reset_index().rename(columns={
         'race_date': 'n_starts'
     })
 
-    trainer_stats = df.groupby('trainer_id').agg({
+    trainer_stats = df.groupby(['trainer_id', 'trainer_name']).agg({
         'dnf': 'sum',
         'scratched': 'sum',
         'vet_scratched': 'sum',
@@ -106,8 +106,8 @@ def group_trainer_info(df: pd.DataFrame) -> pd.DataFrame:
         'breakdown': 'sum'
     }).reset_index()
 
-    trainer_data = trainer_entries.merge(trainer_starts, on='trainer_id', how='inner')
-    trainer_data = trainer_data.merge(trainer_stats, on='trainer_id', how='inner')
+    trainer_data = trainer_entries.merge(trainer_starts, on=['trainer_id', 'trainer_name'], how='inner')
+    trainer_data = trainer_data.merge(trainer_stats, on=['trainer_id', 'trainer_name'], how='inner')
     trainer_data = trainer_data.fillna(0)
 
     for col in COLS_FOR_SMOOTHING:
@@ -115,6 +115,58 @@ def group_trainer_info(df: pd.DataFrame) -> pd.DataFrame:
 
 
     return trainer_data
+
+
+
+def get_prev_race_features(df: pd.DataFrame) -> pd.DataFrame:
+    
+    df['race_date'] = pd.to_datetime(df['race_date'])
+    df = df.sort_values(by=['registration_number', 'race_date'])
+    df = df.rename(columns={'distance_id': 'race_distance'})
+
+    df['previous_race_date'] = df.groupby('registration_number')['race_date'].shift(1)
+    df['previous_race_dnf'] = df.groupby('registration_number')['dnf'].shift(1)
+    df['previous_race_vet_scratched'] = df.groupby('registration_number')['vet_scratched'].shift(1)
+    df['previous_race_badly_beaten'] = df.groupby('registration_number')['badly_beaten'].shift(1)
+    df['previous_race_breakdown'] = df.groupby('registration_number')['breakdown'].shift(1)
+    df['previous_race_scratched'] = df.groupby('registration_number')['scratched'].shift(1)
+    df['previous_race_distance'] = df.groupby('registration_number')['race_distance'].shift(1)
+    df['previous_surface'] = df.groupby('registration_number')['surface'].shift(1)
+    df['days_since_last_race'] = (df['race_date'] - df['previous_race_date']).dt.days
+
+
+    df['distance_delta'] = df['race_distance'] - df['previous_race_distance']
+    df['distance_jump'] = np.where(
+        df['distance_delta'] > 200,
+        1,
+        0
+    )
+
+    df['rest_after_dnf'] = np.where(
+        df['previous_race_dnf'] == 1,
+        df['days_since_last_race'],
+        np.nan
+    )
+
+    df['rest_after_scratch'] = np.where(
+        df['previous_race_scratched'] == 1,
+        df['days_since_last_race'],
+        np.nan
+    )
+
+    df['surface_change'] = np.where(
+        df['surface'] != df['previous_surface'],
+        1,
+        0
+    )
+
+    df['long_layoff'] = np.where(
+        df['days_since_last_race'] > LONG_LAYOFF_THRESHOLD,
+        1,
+        0
+    )
+    
+    return df
 
 
 

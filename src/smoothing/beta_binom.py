@@ -131,7 +131,7 @@ def create_ranking_plot(df: pd.DataFrame, alpha0: float, beta0: float, column_na
     plt.figure()
     plt.errorbar(
         df[f'{column_name}_pct_smoothed'],
-        df["trainer_id"].astype(str),
+        df["trainer_name"].astype(str),
         xerr=[df[f'{column_name}_pct_smoothed'] - df["low"], df["high"] - df[f'{column_name}_pct_smoothed']],
         fmt="o",
         color="blue",

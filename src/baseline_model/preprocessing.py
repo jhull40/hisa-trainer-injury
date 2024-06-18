@@ -1,7 +1,7 @@
+from typing import Tuple, List
 import pandas as pd
 import numpy as np
 
-from utils.processing import get_dnf
 from baseline_model.constants import (
     SURFACES,
     RACE_TYPES,
@@ -10,13 +10,12 @@ from baseline_model.constants import (
     WEATHERS,
     TRACK_SEALEDS,
     SEXES,
-    TARGET
 )
 
 
-def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
+def preprocess_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
     
-    cols_for_model = ['age', 'registration_number', TARGET]
+    cols_for_model = ['age', 'registration_number']
     for i in SURFACES:
         df[f'surface_{i}'] = np.where(
             df['surface'] == i, 1, 0
@@ -59,9 +58,6 @@ def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
         )
         cols_for_model.append(f'sex_{i}')
 
-    df['dnf'] = get_dnf(df)
-    df = df[df['scratch_indicator'] == 'N']
-    df = df[cols_for_model]
-
-    return df
+        
+    return df, cols_for_model
 

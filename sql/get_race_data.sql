@@ -1,4 +1,4 @@
-SELECT 
+SELECT
 r.race_date,
 r.track_id,
 r.race_number,
@@ -11,7 +11,7 @@ r.distance_id,
 r.distance_unit,
 r.surface,
 course_type,
---purse_usa as purse,
+purse_usa as purse,
 track_condition,
 weather,
 --chute_start,
@@ -46,6 +46,7 @@ official_position,
 length_behind_at_finish,
 jockey_id,
 trainer_id,
+trainer.name as trainer_name,
 owner_id,
 trouble_indicator,
 scratch_indicator,
@@ -73,9 +74,11 @@ DATEDIFF(day,foaling_date, r.race_date)/365.0 as age
   and s.race_number = r.race_number
   inner join [RTR_Prod].[dbo].[horse] h
   on h.registration_number = s.registration_number
+  left join [PC_Prod].[dbo].[trainer_stats] trainer
+  on trainer.id = s.trainer_id
 --inner join [RTR_Prod].[dbo].[distance] d
 --on d.distance_id = r.distance_id and r.breed_type = d.breed_type
   
-where 
---left(horse_name,1) = 'B'
-YEAR(r.race_date) = 2020
+where s.country = 'USA'
+and r.breed_type = 'TB'
+and YEAR(r.race_date) = 2014
